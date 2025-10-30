@@ -130,6 +130,7 @@ function doGet(e) {
       return HtmlService.createHtmlOutput(html)
         .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
     } else {
+      // (Aquí se había cortado)
       const htmlTemplate = HtmlService.createTemplateFromFile('Index');
       htmlTemplate.appUrl = appUrl;
       const html = htmlTemplate.evaluate()
@@ -828,21 +829,22 @@ function subirComprobanteManual(dni, fileData, tipoComprobante, datosExtras) {
       let columnaDestino;
       let valorCelda = fileUrl;
 
+      // (Lógica Punto 15)
       switch (tipoComprobante) {
         case 'total_mp':
-        case 'mp_total': // Alias
+        case 'mp_total': // Alias de Index.html
           columnaDestino = COL_COMPROBANTE_MANUAL_TOTAL_EXT; // AN
           break;
         case 'cuota1_mp':
-        case 'mp_cuota_1': // Alias
+        case 'mp_cuota_1': // Alias de Index.html
           columnaDestino = COL_COMPROBANTE_MANUAL_CUOTA1; // AO
           break;
         case 'cuota2_mp':
-        case 'mp_cuota_2': // Alias
+        case 'mp_cuota_2': // Alias de Index.html
           columnaDestino = COL_COMPROBANTE_MANUAL_CUOTA2; // AP
           break;
         case 'cuota3_mp': 
-        case 'mp_cuota_3': // Alias
+        case 'mp_cuota_3': // Alias de Index.html
           columnaDestino = COL_COMPROBANTE_MANUAL_CUOTA3; // AQ
           break;
         case 'externo':
@@ -952,4 +954,3 @@ function subirArchivoIndividual(fileData, dni, tipoArchivo) {
     return { status: 'ERROR', message: 'Error del servidor al subir: ' + e.message };
   }
 }
-
