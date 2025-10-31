@@ -23,12 +23,12 @@
     --color-negro: #000000;
   }
 
-  body::before {
+body::before {
     z-index: -2;
     content: "";
     position: fixed;
     top: 0;
-    left: 30px;
+    left: 0; /* <-- CAMBIO: De 30px a 0 para centrarla correctamente */
     height: 100vh;
     width: 100vw;
    
@@ -364,7 +364,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 94%;
+    width: 100%; /* <-- CAMBIO: De 94% a 100% para igualar al botón rojo */
     padding: 15px;
     border-radius: 6px;
     font-size: 1.1em;
