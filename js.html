@@ -1,6 +1,5 @@
 <script>
-  
-const APP_URL = "<?= appUrl ?>";
+const APP_URL = GLOBAL_APP_URL; // (SOLUCIÓN) Lee la variable global de Index.html
 const CACHE_KEY = 'formDataCache';
 let numeroDeTurnoGuardado = null;
 // let telefonoCounter = 0; // Ya no se usa para teléfonos
@@ -153,24 +152,34 @@ function handleValidationSuccess(response) {
 </div>`;
     }
 
-    // 3. Mostrar botón de repago (si existe)
+    // 3. (Punto 15 y 23) Mostrar SIEMPRE la opción de subida manual Y el botón de pago (si existe)
+    html += `
+<div id="comprobante-manual-seccion" style="margin-top: 15px; border: 1px solid var(--color-principal); padding: 15px; border-radius: 5px;">
+`;
+
+    // (Punto 23) Botón de pago AHORA ESTÁ DENTRO del recuadro
     if (response.init_point) {
       html += `
 <button type="button" id="btn-pagar-pendiente">1. Pagar Próxima Cuota/Pendiente con Mercado Pago</button>
+<hr style="margin: 15px 0;">
+<h3>2. Subir un comprobante (Cuota, Transferencia, etc.):</h3>
 `;
     } else if (response.error_init_point) {
-      html += `<div class="mensaje error" style="text-align:left;">No se pudo generar un link de Mercado Pago: ${response.error_init_point}</div>`;
-    }
-
-    // 4. (Punto 15) Mostrar SIEMPRE la opción de subida manual (HTML ACTUALIZADO)
-    // (ESTA ES LA LÓGICA DEL PUNTO 15)
-    html += `
-<div id="comprobante-manual-seccion" style="margin-top: 15px; border: 1px solid var(--color-principal); padding: 15px; border-radius: 5px;">
+      html += `<div class="mensaje error" style="text-align:left;">No se pudo generar un link de Mercado Pago: ${response.error_init_point}</div>
+<hr style="margin: 15px 0;">
 <h3>2. Subir un comprobante (Cuota, Transferencia, etc.):</h3>
+`;
+    } else {
+      // Si no hay link de pago, solo mostrar el título de subida
+      html += `<h3>Subir un comprobante (Cuota, Transferencia, etc.):</h3>`;
+    }
+    
+    // 4. (HTML ACTUALIZADO CON TEXTO CORRECTO)
+    html += `
 <label for="tipo-comprobante-select">Seleccione el tipo de comprobante:</label>
 <select id="tipo-comprobante-select">
 <option value="">-- Elija una opción --</option>
-<option value="mp_total">a) Comprobante 1 Pago Mercado Pago Total</option>
+<option value="mp_total">a) Comprobante 1 Pago Mercado Pago Monto Total</option>
 <option value="mp_cuotas_group">b) Comprobante Pagos en cuotas Mercado Pago</option>
 <option value="externo">c) Comprobante Externo (Transferencia, etc.)</option>
 </select>
@@ -179,17 +188,17 @@ function handleValidationSuccess(response) {
 <label for="cuota-selector">Seleccione la Cuota a la que corresponde el comprobante:</label>
 <select id="cuota-selector">
 <option value="">-- Seleccione Cuota --</option>
-<option value="mp_cuota_1">Cuota 1 (Impacta en AO)</option>
-<option value="mp_cuota_2" id="sec-op-cuota-2">Cuota 2 (Impacta en AP)</option>
-<option value="mp_cuota_3" id="sec-op-cuota-3">Cuota 3 (Impacta en AQ)</option>
+<option value="mp_cuota_1">Cuota 1</option>
+<option value="mp_cuota_2" id="sec-op-cuota-2">Cuota 2</option>
+<option value="mp_cuota_3" id="sec-op-cuota-3">Cuota 3</option>
 </select>
 </div>
 
 <div id="datos-externo-container">
-<label for="externo-nombre-nino">Nombre y Apellido (del Niño/a Pagador):</label>
-<input type="text" id="externo-nombre-nino" placeholder="Nombre Apellido">
-<label for="externo-dni-nino">DNI (del Niño/a Pagador):</label>
-<input type="text" id="externo-dni-nino" placeholder="DNI sin puntos" pattern="\\d{7,8}" maxlength="8">
+<label for="externo-nombre-pagador">Nombre y Apellido (del Adulto Pagador):</label>
+<input type="text" id="externo-nombre-pagador" placeholder="Nombre Apellido (Quien paga)">
+<label for="externo-dni-pagador">DNI (del Adulto Pagador):</label>
+<input type="text" id="externo-dni-pagador" placeholder="DNI (Quien paga)" pattern="\\d{7,8}" maxlength="8">
 </div>
 
 <div id="upload-file-container">
@@ -223,9 +232,9 @@ function handleValidationSuccess(response) {
     
     // (Punto 15b) Lógica de visibilidad y cuotas
     const cantidadCuotas = parseInt(response.cantidadCuotas) || 0;
-    const metodoPago = response.metodoPago || "";
+    // const metodoPago = response.metodoPago || ""; // <-- Ya no se usa para ocultar
     const cuotaSelectorContainer = document.getElementById('cuota-selector-container');
-    const datosExternoContainer = document.getElementById('datos-externo-container');
+    const datosExternoContainer = document.getElementById('datos-externo-container'); // <-- RE-AGREGADO
     const uploadFileContainer = document.getElementById('upload-file-container');
     const cuotaSelector = document.getElementById('cuota-selector');
     const fileInputComprobante = document.getElementById('comprobante-manual-upload');
@@ -233,19 +242,21 @@ function handleValidationSuccess(response) {
     
     const secOpCuota2 = document.getElementById('sec-op-cuota-2');
     const secOpCuota3 = document.getElementById('sec-op-cuota-3');
-    const opTotal = document.querySelector('#tipo-comprobante-select option[value="mp_total"]');
-    const opCuotaGroup = document.querySelector('#tipo-comprobante-select option[value="mp_cuotas_group"]');
+    // const opTotal = document.querySelector('#tipo-comprobante-select option[value="mp_total"]'); // <-- Ya no se usa
+    // const opCuotaGroup = document.querySelector('#tipo-comprobante-select option[value="mp_cuotas_group"]'); // <-- Ya no se usa
 
     // Ocultar opciones del selector secundario según las cuotas registradas
     if (secOpCuota3) secOpCuota3.style.display = (cantidadCuotas < 3) ? 'none' : 'block';
     if (secOpCuota2) secOpCuota2.style.display = (cantidadCuotas < 2) ? 'none' : 'block';
 
     // (Fix Punto 19) Mostrar/Ocultar opciones del selector principal.
-    if (metodoPago.includes('Cuotas')) {
-        if (opTotal) opTotal.style.display = 'none';
-    } else {
-        if (opCuotaGroup) opCuotaGroup.style.display = 'none';
-    }
+    // ***** ¡¡ESTE ES EL BLOQUE ELIMINADO!! *****
+    // if (metodoPago.includes('Cuotas')) {
+    //     if (opTotal) opTotal.style.display = 'none'; 
+    // } else {
+    //     if (opCuotaGroup) opCuotaGroup.style.display = 'none';
+    // }
+    // ***** ¡¡FIN DEL BLOQUE ELIMINADO!! *****
 
 
     // (Punto 15c y Fix Punto 1) Listener del selector principal
@@ -254,8 +265,8 @@ function handleValidationSuccess(response) {
       tipoComprobanteSelect.addEventListener('change', function() {
         const tipo = this.value;
 
-        // (Punto 20/22) AHORA SE MUESTRA PARA 'externo' Y 'mp_total'
-        datosExternoContainer.style.display = (tipo === 'externo' || tipo === 'mp_total') ? 'block' : 'none';
+        // (LÓGICA REQUERIDA) Mostrar el mini-form del pagador para TODOS los tipos
+        datosExternoContainer.style.display = (tipo !== '') ? 'block' : 'none';
         
         // Mostrar/Ocultar el selector secundario de cuotas
         cuotaSelectorContainer.style.display = (tipo === 'mp_cuotas_group') ? 'block' : 'none';
@@ -314,17 +325,17 @@ function handleValidationSuccess(response) {
         }
         // --- FIN LÓGICA ---
 
-        let datosExtras = null;
+        let datosExtras = null; // <-- RE-AGREGADO
 
-        // (Punto 20/22) Ahora el mini-form se usa para 'externo' Y 'mp_total'
-        if (tipoComprobante === 'externo' || tipoComprobante === 'mp_total') {
-          const nombreExterno = document.getElementById('externo-nombre-nino').value;
-          const dniExterno = document.getElementById('externo-dni-nino').value;
-          if (!nombreExterno || !dniExterno) {
-            alert('Por favor, complete el Nombre/Apellido y DNI del niño para este tipo de comprobante.');
+        // (LÓGICA REQUERIDA) Recolectar datos del PAGADOR (si el tipo es válido)
+        if (tipoComprobante && tipoComprobante !== 'mp_cuotas_group') {
+          const nombrePagador = document.getElementById('externo-nombre-pagador').value; // <-- ID NUEVO
+          const dniPagador = document.getElementById('externo-dni-pagador').value; // <-- ID NUEVO
+          if (!nombrePagador || !dniPagador) {
+            alert('Por favor, complete el Nombre/Apellido y DNI del Adulto Pagador.');
             return;
           }
-          datosExtras = { nombreNiño: nombreExterno, dniNiño: dniExterno };
+          datosExtras = { nombrePagador: nombrePagador, dniPagador: dniPagador }; // <-- RE-AGREGADO
         }
         
         // Validaciones generales
@@ -348,7 +359,7 @@ function handleValidationSuccess(response) {
           google.script.run
             .withSuccessHandler(handleComprobanteUploadSuccess) 
             .withFailureHandler(handleComprobanteUploadFailure) 
-            .subirComprobanteManual(dni, fileData, tipoComprobante, datosExtras); 
+            .subirComprobanteManual(dni, fileData, tipoComprobante, datosExtras); // <-- RE-AGREGADO
         }).catch(err => {
           handleComprobanteUploadFailure(err);
         });
@@ -379,7 +390,6 @@ function handleValidationSuccess(response) {
     statusDiv.innerHTML = `<div class="mensaje error"><strong>Aviso:</strong> ${response.message}</div>`;
   }
 }
-
 /**
  * (h) Función de fallo para la validación
  */
@@ -466,7 +476,7 @@ function handleComprobanteUploadSuccess(response) {
   
   const tipoComprobanteSelect = document.getElementById('tipo-comprobante-select');
   const cuotaSelectorContainer = document.getElementById('cuota-selector-container');
-  const datosExternoContainer = document.getElementById('datos-externo-container');
+  const datosExternoContainer = document.getElementById('datos-externo-container'); // <-- RE-AGREGADO
   const uploadFileContainer = document.getElementById('upload-file-container');
   const btnClearComprobante = document.getElementById('btn-clear-comprobante'); // NEW
 
@@ -482,14 +492,14 @@ function handleComprobanteUploadSuccess(response) {
     
     // Ocultar contenedores
     if (cuotaSelectorContainer) cuotaSelectorContainer.style.display = 'none';
-    if (datosExternoContainer) datosExternoContainer.style.display = 'none';
+    if (datosExternoContainer) datosExternoContainer.style.display = 'none'; // <-- RE-AGREGADO
     if (uploadFileContainer) uploadFileContainer.style.display = 'none';
 
     if (btnClearComprobante) btnClearComprobante.style.display = 'none';
     
-    // Opcional: limpiar datos externos
-    if (document.getElementById('externo-nombre-nino')) document.getElementById('externo-nombre-nino').value = '';
-    if (document.getElementById('externo-dni-nino')) document.getElementById('externo-dni-nino').value = '';
+    // (LÓGICA REQUERIDA) Limpiar datos del pagador
+    if (document.getElementById('externo-nombre-pagador')) document.getElementById('externo-nombre-pagador').value = '';
+    if (document.getElementById('externo-dni-pagador')) document.getElementById('externo-dni-pagador').value = '';
 
 
   } else {
@@ -1194,3 +1204,4 @@ document.addEventListener('DOMContentLoaded', () => {
 }); // <-- FIN DEL DOMContentLoaded
 
 </script>
+</body>

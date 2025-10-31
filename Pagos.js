@@ -539,10 +539,12 @@ function actualizarEstadoEnPlanilla(dni, datosActualizacion) {
       }
 
       // Llamadas a los helpers (Columnas actualizadas)
-      actualizarCelda_AnexarSiempre(COL_ID_PAGO_MP, datosActualizacion.idOperacion);
-      actualizarCelda_AnexarSiempre(COL_COMPROBANTE_MP, datosActualizacion.urlComprobante);
-      actualizarCelda_AnexarSiDiferente(COL_PAGADOR_NOMBRE, datosActualizacion.nombrePagador);
-      actualizarCelda_AnexarSiDiferente(COL_PAGADOR_DNI, datosActualizacion.dniPagador);
+      // ESTA SECCIÓN SE ACTUALIZÓ CON LAS NUEVAS CONSTANTES
+      actualizarCelda_AnexarSiempre(COL_ID_PAGO_MP, datosActualizacion.idOperacion); // AJ (36)
+      actualizarCelda_AnexarSiempre(COL_COMPROBANTE_MP, datosActualizacion.urlComprobante); // AO (41)
+      actualizarCelda_AnexarSiDiferente(COL_PAGADOR_NOMBRE, datosActualizacion.nombrePagador); // AK (37)
+      // ¡CAMBIO CLAVE! Se usa la nueva constante para la columna AL (38)
+      actualizarCelda_AnexarSiDiferente(COL_DNI_PAGADOR_MP, datosActualizacion.dniPagador); // AL (38)
 
       if (cuotaNum != null) {
         const cantidadCuotasRegistrada = parseInt(hoja.getRange(fila, COL_CANTIDAD_CUOTAS).getValue()) || 3;
@@ -572,10 +574,6 @@ function actualizarEstadoEnPlanilla(dni, datosActualizacion) {
     lock.releaseLock();
   }
 }
-// =========================================================
-// (FIN DE LA CORRECCIÓN)
-// =========================================================
-
 // ========================================================================
 // (FUNCIONES DE EMAIL REVISADAS)
 // (Punto 2) Usan nombre/apellido
